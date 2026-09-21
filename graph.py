@@ -1,27 +1,31 @@
 from langgraph.graph import StateGraph, START, END
 from state import LogState
-from nodes import split_node
+from nodes import split_node, judge_node, save_node
+from edges import route_after_judgment
+import json
 
-# 1. Initialize graph builder with the LogState schema
 builder = StateGraph(LogState)
 
-# 2. Register the node
 builder.add_node("split_node", split_node)
+builder.add_node("judge_node", judge_node)
+builder.add_node("save_node", save_node)
 
-# 3. Define the linear edge execution
 builder.add_edge(START, "split_node")
-builder.add_edge("split_node", END)
+builder.add_edge("split_node", "judge_node")
 
-# 4. Compile the graph into an executable runnable
+builder.add_conditional_edges(
+    "judge_node",
+    route_after_judgment,
+    {
+        "retry": "split_node",
+        "save_node": "save_node"
+    }
+)
+builder.add_edge("save_node", END)
+
 app = builder.compile()
 
-# --- Execution & Verification ---
 if __name__ == "__main__":
-    # Visual verification: print Mermaid diagram definition
-    print("--- Mermaid Graph Definition ---")
-    print(app.get_graph().draw_mermaid())
-    print("--------------------------------\n")
-
     try:
         png_data = app.get_graph().draw_mermaid_png()
         with open("graph.png", "wb") as f:
@@ -33,16 +37,30 @@ if __name__ == "__main__":
     # Test run with sample input
     sample_input = {
         "raw_input": (
-            "The French Revolution began in 1789 with the Storming of the Bastille. "
-            "It eventually led to the rise of Napoleon Bonaparte, who declared himself Emperor in 1804."
+            "America Independence, 4 July 1776 "
+            ""
         ),
-        "pending_facts": [],
-        "approved_facts": [],
-        "retry_count": 0
+        "pending_items": [],
+        "approved_items": [],
+        "retry_count": 0,
     }
 
-    print("\nRunning graph invocation...")
-    output = app.invoke(sample_input)
-    print("\nFinal State Output:")
-    print(f"Extracted Facts: {output.get('pending_facts')}")
-    print(f"Retry Count: {output.get('retry_count')}")
+    print("Starting execution...\n")
+    accumulated_state = dict(sample_input)
+
+    for event in app.stream(sample_input, stream_mode="updates"):
+        for node_name, state_patch in event.items():
+            print(f"--- [Node: {node_name}] ---")
+            for key, val in state_patch.items():
+                print(f"{key}: {json.dumps(val, indent=2)}")
+            accumulated_state.update(state_patch)
+
+    print("\n================ FINAL SUMMARY ================")
+    print("Approved Items:")
+    print(json.dumps(accumulated_state.get("approved_items"), indent=2))
+    
+    pending = accumulated_state.get("pending_items")
+    if pending:
+        print("\nRejected / Pending Items:")
+        print(json.dumps(pending, indent=2))
+    print(f"\nTotal Retries: {accumulated_state.get('retry_count')}")

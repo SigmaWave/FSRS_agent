@@ -1,2 +1,4 @@
 langgraph
 langchain_openai
+psycopg2-binary
+dotenv
