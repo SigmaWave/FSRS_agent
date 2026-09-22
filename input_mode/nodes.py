@@ -1,8 +1,8 @@
 import json
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
-from state import LogState
-from schema import ExtractedData, CategoryVerdict
+from input_mode.state import LogState
+from input_mode.schema import ExtractedData, CategoryVerdict
 from db import insert_approved_items
 
 llm = ChatOpenAI(

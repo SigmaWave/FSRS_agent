@@ -22,6 +22,13 @@ def init_db():
             """)
             
             # 2. Knowledge
+            #TODO: Keep category, change informations fields for format interchangeability, formats in the future will include:
+            # citation/author
+            # event/date
+            # coding_command/description of command
+            # coding concept => mutli prompt query to assess knowledge
+            # idiom_french/idiom_english
+            # statistics
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS Knowledge (
                     id SERIAL PRIMARY KEY,

@@ -1,4 +1,4 @@
-from state import LogState
+from input_mode.state import LogState
 
 def route_after_judgment(state: LogState) -> str:
     MAX_RETRIES = 2

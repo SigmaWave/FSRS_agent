@@ -1,7 +1,7 @@
 from langgraph.graph import StateGraph, START, END
-from state import LogState
-from nodes import split_node, judge_node, save_node
-from edges import route_after_judgment
+from input_mode.state import LogState
+from input_mode.nodes import split_node, judge_node, save_node
+from input_mode.edges import route_after_judgment
 import json
 
 builder = StateGraph(LogState)
@@ -28,16 +28,15 @@ app = builder.compile()
 if __name__ == "__main__":
     try:
         png_data = app.get_graph().draw_mermaid_png()
-        with open("graph.png", "wb") as f:
+        with open("input_mode/graph.png", "wb") as f:
             f.write(png_data)
-        print("Graph diagram saved to graph.png")
+        print("Graph diagram saved to input_mode/graph.png")
     except Exception as e:
         print(f"Could not render image file: {e}")
 
     # Test run with sample input
     sample_input = {
         "raw_input": (
-            "America Independence, 4 July 1776 "
             ""
         ),
         "pending_items": [],
